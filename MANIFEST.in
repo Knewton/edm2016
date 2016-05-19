@@ -1,0 +1,3 @@
+include requirements.in
+include requirements.testing.in
+include README.md

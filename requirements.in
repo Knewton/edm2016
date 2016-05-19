@@ -1,0 +1,8 @@
+numpy>=1.8,<1.11
+scipy>=0.14,<0.16
+pandas>=0.16,<0.17
+ipython>=2,<3
+click>=4,<7
+theano
+enum34
+python-igraph
