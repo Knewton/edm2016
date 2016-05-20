@@ -28,6 +28,12 @@ Recurrent neural network implemented using Theano.
 - pandas
 - igraph
 
+# Data
+
+The ASSISTments data set may be found [here](https://sites.google.com/site/assistmentsdata/home/assistment-2009-2010-data/skill-builder-data-2009-2010). Note that the authors of the data set have since removed several duplicates from the original data set which we used. However, as we explain in the paper, our preprocessing steps involved removing these duplicates as well. Thus, while we used the original data set, both the original and the corrected versions should duplicate our results.
+
+The KDD Cup data set may be found [here](https://pslcdatashop.web.cmu.edu/KDDCup/downloads.jsp). We used the Bridge to Algebra 2006-2007 data set, and specifically the training data set.
+
 # Usage
 ```
     Usage: rnn_prof [OPTIONS] COMMAND [ARGS]...
