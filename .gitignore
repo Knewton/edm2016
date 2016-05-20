@@ -1,0 +1,26 @@
+# compiled code
+*.pyc
+
+# swap files
+*.swp
+*.swo
+*~
+*#
+
+# apple cruft
+.DS_Store
+
+# py.test artifacts
+__pycache__
+
+# log files
+*.log
+
+# build files
+target
+dist/
+*.egg-info/
+build/
+MANIFEST
+
+.tox/

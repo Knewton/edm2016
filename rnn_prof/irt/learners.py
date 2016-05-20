@@ -1,8 +1,6 @@
 """
 Module containing simple prefab learners with 1PO and 2PO model structure.
 """
-from abc import ABCMeta
-
 import numpy as np
 
 from .constants import (TRAIN_RESPONSES_KEY, TEST_RESPONSES_KEY, THETAS_KEY, NONOFFSET_COEFFS_KEY,
@@ -21,7 +19,7 @@ HIGHER_OFFSET_KEY = 'higher'
 
 class OnePOLearner(BayesNetLearner):
     """
-    Baseclass for simple implementations of 1 parameter IRTs as a BayesNet
+    A simple implementation of 1 parameter IRT as a BayesNet
     """
     def __init__(self, correct, student_ids=None, item_ids=None, student_idx=None,
                  item_idx=None, is_held_out=None, num_students=None, num_items=None,
@@ -129,10 +127,8 @@ class OnePOLearner(BayesNetLearner):
 
 class TwoPOLearner(OnePOLearner):
     """
-    Baseclass for simple implementations of 2 parameter IRT as a BayesNet
+    A simple implementation of a 2 parameter IRT as a BayesNet
     """
-    __metaclass__ = ABCMeta
-
     def upgrade_nodes_to_twopo(self):
         """ Updates (in-place) own response nodes to use the TwoParCPD, and adds a non-offset
         coefficient node.

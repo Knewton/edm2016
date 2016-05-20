@@ -12,7 +12,6 @@ Bayesian versions of one and two parameter Item Response Theory models.  The lik
 
 ## Hierarchical IRT
 
-
 Implementation of an IRT model that extends the model above with a Gaussian hyper-prior on item difficulties.
 
 ## DKT
@@ -44,30 +43,46 @@ Recurrent neural network implemented using Theano.
 ```
 
 
-# Commands to reproduce results in the EDM2016 paper:
+# To reproduce results in the EDM2016 paper:
+
+1. construct the 20/80 split data sets (20% for model parameter selection, e.g.,
+prior parameters, RNN layer sizes; 80% for train/test).  Detailed instructions:
+  a. TBD
+
+2. execute the following commands:
 
 ## IRT
-    rnn_prof irt assistments skill_builder_data_big.txt --onepo \
+    rnn_prof irt assistments skill_builder_data_80.txt --onepo \
     --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-id-col problem_id --concept-id-col single 
 
-    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_big.txt \
+    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_80.txt \
     --onepo --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-id-col 'Step Name' --concept-id-col single
 
 ## HIRT
-    rnn_prof irt assistments skill_builder_data_big.txt --onepo \
+    rnn_prof irt assistments skill_builder_data_80.txt --onepo \
     --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-precision 4.0 --template-precision 2.0 \
     --template-id-col template_id --item-id-col problem_id \
     --concept-id-col single
 
+    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_80.txt  --onepo \
+    --drop-duplicates --no-remove-skill-nans --num-folds 5 \
+    --item-precision 2.0 --template-precision 4.0 -m 5000 \
+    --template-id-col template_id --item-id-col problem_id \
+    --concept-id-col single
 
 ## DKT
+    rnn_prof rnn assistments skill_builder_data_80.txt  \
+    --no-remove-skill-nans --drop-duplicates --num-folds 5 \
+    --item-id-col problem_id --num-iters 50 --dropout-prob 0.25 \
+    --first-learning-rate 5.0  --compress-dim 50 --hidden-dim 100 
 
-    rnn_prof rnn kddcup bridge_to_algebra_2006_2007_train_big.txt  \
+    rnn_prof rnn kddcup bridge_to_algebra_2006_2007_train_80.txt  \
     --no-remove-skill-nans --drop-duplicates --num-folds 5 --item-id-col KC \
     --num-iters 50 --dropout-prob 0.25 --first-learning-rate 5.0 \
     --compress-dim 50 --hidden-dim 100 
+
 
 
