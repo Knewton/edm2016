@@ -21,7 +21,7 @@ Recurrent neural network implemented using Theano.
 # Requirements (see `requirements.in`)
 - python
 - theano
-- numpu
+- numpy
 - scipy
 - ipython
 - pandas
