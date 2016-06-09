@@ -154,6 +154,48 @@ class Node(object):
         :return: parameter log-prob terms (incl gradients and Hessian) for all the parent nodes
         :rtype: dict[Node, FunctionInfo]
         """
+
+        def is_square_mat(x):
+            """
+            :param float|np.ndarray|sp.spmatrix x:
+            :return: True if x is a matrix (has dimension NxN with N > 1), False otherwise
+            :rtype: bool
+            """
+            return not np.isscalar(x) and x.size > 1 and x.size == x.shape[0] ** 2
+
+        def matrixify(non_mat, dim, to_sparse):
+            """
+            Convert a scalar/vector into a diagonal matrix (with the scalar/vector on the diagonal)
+            :param float|np.ndarray non_mat: A scalar or vector
+            :param int dim: The dimension of the resulting diagonal matrix
+            :param boolean to_sparse: If True, make the diagonal matrix sparse
+            :return: Diagonal matrix
+            :rtype: np.ndarray|sp.spmatrix
+            """
+            is_vec = not np.isscalar(non_mat) and np.prod(non_mat.shape) > 1
+            if to_sparse:
+                return sp.diags(non_mat.ravel(), 0) if is_vec else non_mat * sp.eye(dim)
+            else:
+                return np.diag(non_mat.ravel(), 0) if is_vec else non_mat * np.eye(dim)
+
+        def add_hessians(hess1, hess2):
+            """
+            Add two hessians. Each hessian can be either scalar, vector, or square matrix. In the
+            case of vectors/matrices, dimensions are assumed to match. If a parameter
+            scalar/vector, it is assumed that it represents a diagonal matrix with the
+            scalar/vector as its diagonal values.
+
+            :param float|np.ndarray|sp.spmatrix hess1: The first hessian
+            :param float|np.ndarray|sp.spmatrix hess2: The second hessian
+            :return: hess1 + hess2
+            :rtype: float|np.ndarray|sp.spmatrix
+            """
+            if is_square_mat(hess1) and not is_square_mat(hess2):
+                hess2 = matrixify(hess2, hess1.shape[0], sp.issparse(hess1))
+            elif is_square_mat(hess2) and not is_square_mat(hess1):
+                hess1 = matrixify(hess1, hess2.shape[0], sp.issparse(hess2))
+            return hess1 + hess2
+
         if self.solver_pars.learn:
             # get the CPD terms required by the data updater
             data_term = {self.cpd.DATA_KEY: self.required_update_terms}
@@ -168,15 +210,7 @@ class Node(object):
                     if evidence_term.gradient is not None:
                         gradient += evidence_term.gradient
                     if evidence_term.hessian is not None:
-                        if isinstance(hessian, sp.spmatrix) and np.isscalar(evidence_term.hessian):
-                            hessian.data += evidence_term.hessian
-                        elif (np.isscalar(hessian) and
-                              isinstance(evidence_term.hessian, sp.spmatrix)):
-                            hessian_scalar = hessian
-                            hessian = evidence_term.hessian
-                            hessian.data += hessian_scalar
-                        else:
-                            hessian = hessian + evidence_term.hessian
+                        hessian = add_hessians(hessian, evidence_term.hessian)
             new_data = self.solver_pars.updater(self.data, gradient, hessian, self.cpd.support)
             self.max_grad = np.max(np.abs(gradient))
             self.max_diff = np.max(np.abs(new_data - self.data))
@@ -305,10 +339,10 @@ class DefaultGaussianNode(Node):
         """ Make a node with a Gaussian CPD and all-zero data.
         :param str name: name of the node
         :param int dim: dimensionality of the data vector
-        :param mean: The mean of the Gaussian. See ..py.module:`cpd.gaussian`
+        :param mean: The mean of the Gaussian. See ..py.module:`kirt.bayesnet.cpd.gaussian`
             for more details
-        :param precision: The precision of the Gaussian. See..py.module:`cpd.gaussian` for more
-            details
+        :param precision: The precision of the Gaussian. See
+            ..py.module:`.cpd.gaussian` for more details
         :type mean: float|np.ndarray|sp.spmatrix|None
         :type precision: float|np.ndarray|sp.spmatrix|None
         :param node_kwargs: optional parameters to pass to the Node constructor

@@ -4,7 +4,8 @@ Basic callbacks for the Bayes Net IRT learners.
 import logging
 import numpy as np
 
-from .metrics import LOGLI_KEY, MAP_ACCURACY_KEY, AUC_KEY
+from .cpd.ogive import OgiveCPD
+from .metrics import LOGLI_KEY, MAP_ACCURACY_KEY, AUC_KEY, METRICS_KEYS
 
 LOGGER = logging.getLogger(__name__)
 TRAIN_LOG_POST_KEY = 'train log posterior'
@@ -103,3 +104,54 @@ class ConvergenceCallback(object):
         max_grad = np.log10(np.max(grad_diffs)) if len(grad_diffs) else np.nan
         max_diff = np.log10(np.max(diff_diffs)) if len(diff_diffs) else np.nan
         return max_grad, max_diff
+
+
+class RecordingCallback(ConvergenceCallback):
+    """ Callback function that records basic learning metrics. """
+    def __init__(self, metrics_to_record=DEFAULT_METRICS, **kwargs):
+        super(RecordingCallback, self).__init__(**kwargs)
+        self.metrics = {m: None for m in metrics_to_record}
+
+    def __call__(self, learner):
+        self.record_metrics(learner)
+        return super(RecordingCallback, self).__call__(learner, metrics=self.metrics)
+
+    def record_metrics(self, learner):
+        """ Record the performance metrics: iteration count, global learner log-posterior, and
+        the metrics specified at initialization (e.g., log-likelihood, test MAP accuracy) for
+        all OgiveCPD nodes.
+        NOTE: The latter performance metrics are dictionaries two levels deep, and should be
+        accessed as `callback.metrics[AUC_KEY][test_response_node.name]`.
+        """
+        def append_metric(new_value, metric_key, node_key=None, dtype=None):
+            """ Helper function for appending to (possibly uninitialized) dictionary of metrics,
+            one (iteration count, log-posterior) or two (e.g., AUC for particular node) levels
+            deep."""
+            # initialize dicts/arrays if necessary
+            dtype = dtype or np.float64
+            if self.metrics[metric_key] is None:
+                init_vals = np.nan * np.empty(MAX_HIST_LEN, dtype=dtype)
+                self.metrics[metric_key] = init_vals if node_key is None else {node_key: init_vals}
+            elif node_key is not None and node_key not in self.metrics[metric_key]:
+                init_vals = np.nan * np.empty(MAX_HIST_LEN, dtype=dtype)
+                self.metrics[metric_key][node_key] = init_vals
+            # get dictionary element and append
+            if node_key is None:
+                metric = self.metrics[metric_key]
+            else:
+                metric = self.metrics[metric_key][node_key]
+            return np.append(metric[1:], new_value)
+
+        for mkey in self.metrics:
+            if mkey == ITER_KEY:
+                # write iteration count
+                self.metrics[mkey] = append_metric(learner.iter, mkey, dtype=int)
+            elif mkey == TRAIN_LOG_POST_KEY:
+                # write global learner log-posterior
+                self.metrics[mkey] = append_metric(learner.log_posterior, mkey)
+            elif mkey in METRICS_KEYS:
+                # for all other metrics, record values for each node with an OgiveCPD
+                for node in learner.nodes.itervalues():
+                    if isinstance(node.cpd, OgiveCPD):
+                        metric = node.metrics.compute_metric(mkey)
+                        self.metrics[mkey][node.name] = append_metric(metric, mkey, node.name)
