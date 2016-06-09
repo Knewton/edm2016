@@ -52,40 +52,41 @@ The KDD Cup data set may be found [here](https://pslcdatashop.web.cmu.edu/KDDCup
 # To reproduce results in the EDM2016 paper:
 
 1. construct the 20/80 split data sets (20% for model parameter selection, e.g.,
-prior parameters, RNN layer sizes; 80% for train/test).  Detailed instructions:
-  a. TBD
+prior parameters, RNN layer sizes; 80% for train/test) using `data/split_data.py`, 
+`python split_data.py bridge_to_algebra_2006_2007_train.txt "Anon Student Id" "\t"`, 
+`python split_data.py skill_builder_data.csv user_id ","`
 
 2. execute the following commands:
 
-## IRT
-    rnn_prof irt assistments skill_builder_data_80.txt --onepo \
+#### IRT
+    rnn_prof irt assistments skill_builder_data_big.txt --onepo \
     --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-id-col problem_id --concept-id-col single 
 
-    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_80.txt \
+    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_big.txt \
     --onepo --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-id-col 'Step Name' --concept-id-col single
 
-## HIRT
-    rnn_prof irt assistments skill_builder_data_80.txt --onepo \
+#### HIRT
+    rnn_prof irt assistments skill_builder_data_big.txt --onepo \
     --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-precision 4.0 --template-precision 2.0 \
     --template-id-col template_id --item-id-col problem_id \
     --concept-id-col single
 
-    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_80.txt  --onepo \
+    rnn_prof irt kddcup bridge_to_algebra_2006_2007_train_big.txt  --onepo \
     --drop-duplicates --no-remove-skill-nans --num-folds 5 \
     --item-precision 2.0 --template-precision 4.0 -m 5000 \
     --template-id-col template_id --item-id-col problem_id \
     --concept-id-col single
 
-## DKT
-    rnn_prof rnn assistments skill_builder_data_80.txt  \
+#### DKT
+    rnn_prof rnn assistments skill_builder_data_big.txt  \
     --no-remove-skill-nans --drop-duplicates --num-folds 5 \
     --item-id-col problem_id --num-iters 50 --dropout-prob 0.25 \
     --first-learning-rate 5.0  --compress-dim 50 --hidden-dim 100 
 
-    rnn_prof rnn kddcup bridge_to_algebra_2006_2007_train_80.txt  \
+    rnn_prof rnn kddcup bridge_to_algebra_2006_2007_train_big.txt  \
     --no-remove-skill-nans --drop-duplicates --num-folds 5 --item-id-col KC \
     --num-iters 50 --dropout-prob 0.25 --first-learning-rate 5.0 \
     --compress-dim 50 --hidden-dim 100 
